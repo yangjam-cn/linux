@@ -1,7 +1,7 @@
 <!--
  * @Author: youngjam
  * @Date: 2020-06-19 16:50:04
- * @LastEditTime: 2020-06-19 19:25:12
+ * @LastEditTime: 2020-06-20 16:46:49
  * @Description:linux学习文件 
  * @logs: 
 --> 
@@ -51,5 +51,100 @@
 * .html、.htm、php、.jsp、.do等表示网页语言文件
 * .conf表示系统服务的配置文件
 * .rpm表示rpm安装包文件
------
+----------------------------------------
 # 用户组与文件权限
+## 用户及用户组
+* linux是多用户操作系统，其中具有管理其它用户和计算机全部资源的用户，称为root
+* 在linux中，每个用户有一个特定的编号uid，用于标识一个系统用户
+  ```shell
+  ~$ id
+  uid=1000(youngjam) gid=1000(youngjam) 组=1000(youngjam),4(adm),24(cdrom),27(sudo),30(dip),46(plugdev),116(lpadmin),126(sambashare)
+  ```
+* gid用于标识当前用户所在分组(Group)，每个用户可以对应多个分组
+## 文件权限
+* linux的文件属性可以分为读权限、写权限、执行权限(加载到内存中，由操作系统加载执行)
+* 文件使用者的三种情况，文件拥有者、分组成员、其他分组成员
+----------------------------------------
+# 使用命令行
+* `Shell`：指命令行解释器，常见的解释器有bash、sh，在ubuntu中默认使用bash解释器
+* `终端(Terminal)`：通常指用来运行shell的程序，视场景的不同，如ubuntu系统自带的叫本地终端，嵌入式开发板常常提供串口进行输入输出的串口终端，通过网络访问的ssh终端
+* `控制台(Console)`：特指某些终端，通常指它的物理形态，如带键盘和显示器的物理设备
+## 打开终端
+* 快捷键 ctrl+alt+k
+## 命令提示符
+  * 示例
+    ```shell
+    youngjam@ubuntu:~$
+    ```
+    + youngjam：显示的是当前的登录用户
+    + @：分割符号，可理解为at，表示youngjam用户在主机ubuntu上
+    + ubuntu：当前系统的主机名
+    + “:”：分割符号
+    + ~：冒号后表示用户当前所在目录，“~”表示当前用户的家目录
+    + \$：命令提示符，标识用户的权限等级；超级用户为"#"，普通用户为"$"
+## 常用命令
+  * cd 切换目录
+  * mkdir 创建新目录
+  * touch 创建新文件
+  * ls 显示指定目录下的内容
+  * cat 把两个内容串联起来，通常用来在终端下输出文件进行查看
+  * echo 在终端打印文字或变量
+  * ">" 将命令执行的结果输出到文件(覆盖掉原文件)，">>"追加到文件的末尾
+  * rmdir 删除空的目录 -p 递归删除子目录
+  * rm 删除一个或多个文件或目录
+    * -i：删除文件或文件夹前，终端会逐一询问确认
+    * -r：将目录及其包含的子目录或文件全部删除
+    * -f：忽略不存在的文件，无需逐一确认
+  * sudo 为当前用户追加root权限
+  * clear 清除当前屏幕
+  * reboot/poweroff 控制系统的重启/关机
+  * man 查看命令的说明手册
+----------------------------------
+# 包管理器
+## 软件包与包管理工具
+* 在Debian、Ubuntu等linux发行版中，通常使用deb(debian)形式的软件包，安装方式如下：
+  ```sehll
+  sudo dpkg -i xxxx.deb
+  ```
+## apt工具
+* apt-get install 软件包名
+* sudo apt-get install 软件包名
+* apt-get remove 软件包名
+* 常用镜像站
+  * https://mirrors.tuna.tsinghua.edu.cn/
+  * https://mirrors.ustc.edu.cn/
+  * main：完全开源软件，可以被ubuntu官方完全支持的软件
+  * multiverse：非开源软件，不提供任何支持和补丁
+  * restricted：不完全开源的软件，依然被ubuntu官方那个支持的软件，不能提供完全技术支持
+  * universe：ubuntu官方不提供支持与补丁，全靠社区支持
+* 修改软件源
+  * ubuntu软件源配置文件 etc/apt/sources.list
+  * 软件源格式
+    |软件包格式|镜像源地址|ubuntu发行版版本号|软件包类型|
+    |:------------|:------------|:-------------------------|:------------|
+    |deb/deb-src|https://mirrors.tuna.tsinghua.edu.cn/ubuntu/|bionic|main restricted universe multiverse|
+    * 第一部分：deb格式表示软件包，deb-src对应软件的源代码
+    * 第二部分：镜像源地址
+    * 第三部分：发行版本号
+    * 第四部分：软件包类型
+* sudo apt-get update：扫描每个软件源地址，并为该软件源地址所具有软件包资源建立索引文件，存放在本地的var/lib/apt/lists/目录下
+* apt-cache工具
+  |命令|作用|
+  |:----|:-----|
+  |apt-cache showsrc package-name|显示软件包的相关信息，如版本信息，依赖关系等|
+  |apt-cache search p-name|按关键字查找软件包|
+  |... depends name|显示该软件包的依赖关系|
+  |... rdepands name|显示所有依赖于该软件包的软件包名字|
+  |... show name|显示指定软件包的信息，如版本信息，依赖关系等|
+  |... pkgnames|显示所有软件包名字|
+  |... policy name|显示软件包的安装状态|
+## apt与apt-get
+* 表-apt命令
+  |命令|作用|
+  |:----|:-----|
+  |apt install pkg-name|安装指定软件包|
+  |apt remove pkg-name|卸载指定的软件包|
+  |apt update|更新软件源列表|
+  |apt search pkg-name|根据关键字搜索对应的软件包|
+  |apt show pkg-name|显示软件包的相关信息|
+  |apt list|根据名称列出所有软件包|
