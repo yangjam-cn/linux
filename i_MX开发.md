@@ -1,7 +1,7 @@
 <!--
  * @Author: youngjam
  * @Date: 2020-06-21 15:52:05
- * @LastEditTime: 2020-06-21 16:19:38
+ * @LastEditTime: 2020-06-22 10:44:00
  * @Description: imx开发笔记
  * @logs: 
  * 6.21 增加开发板硬件资源、烧录镜像、启动设置等
@@ -18,6 +18,15 @@
   - [硬件准备](#硬件准备)
   - [启动步骤](#启动步骤)
   - [设置MobaXterm连接终端](#设置mobaxterm连接终端)
+- [查看系统信息](#查看系统信息)
+  - [初探proc目录](#初探proc目录)
+  - [查看cpu信息](#查看cpu信息)
+  - [查看内核版本](#查看内核版本)
+  - [查看内存信息](#查看内存信息)
+  - [查看flash存储器容量](#查看flash存储器容量)
+  - [查看任务进程](#查看任务进程)
+  - [查看支持的文件系统](#查看支持的文件系统)
+  - [查看cpu当前主频](#查看cpu当前主频)
 
 <!-- /TOC -->
 # EBF6ULL Pro硬件资源
@@ -118,3 +127,26 @@
 2. 使用mini USB连接电脑和开发板，开发板要接“USB转串口”接口
 3. 连接并供电后，在windows的“设备管理器”的“端口”查看新增的“USB-SERIAL CH340”设备COM号
 4. 打开MoBaXterm软件，新建session，选择serial连接，波特率设为115200
+
+---------------------------
+# 查看系统信息
+## 初探proc目录
+* 系统运行信息记录在/proc目录下的文件中
+    ![avatar](picture/proc.png)
+## 查看cpu信息
+* cat /proc/cpuinfo
+## 查看内核版本
+* cat /proc/version
+* uname -a
+## 查看内存信息
+* cat /proc/meminfo
+* free
+## 查看flash存储器容量
+* cat /proc/partitions
+## 查看任务进程
+* proc目录下使用 ls pid
+* top 实时更新进程信息，"q"和"ctrl+c"退出
+## 查看支持的文件系统
+* cat /proc/filesystems
+## 查看cpu当前主频
+* cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
