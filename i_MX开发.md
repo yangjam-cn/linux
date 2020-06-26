@@ -5,6 +5,7 @@
  * @Description: imx开发笔记
  * @logs: 
  * 6.21 增加开发板硬件资源、烧录镜像、启动设置等
+ * 6.22 增加查看系统信息
 --> 
 <!-- TOC -->
 
@@ -27,6 +28,11 @@
   - [查看任务进程](#查看任务进程)
   - [查看支持的文件系统](#查看支持的文件系统)
   - [查看cpu当前主频](#查看cpu当前主频)
+  - [* cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq](#ullicat-sysdevicessystemcpucpu0cpufreqcpuinfo_cur_freqliul)
+- [fire-config工具](#fire-config工具)
+  - [设置ssh](#设置ssh)
+  - [fire-config刷机](#fire-config刷机)
+  - [fire-config连接wifi](#fire-config连接wifi)
 
 <!-- /TOC -->
 # EBF6ULL Pro硬件资源
@@ -150,3 +156,41 @@
 * cat /proc/filesystems
 ## 查看cpu当前主频
 * cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_cur_freq
+----------------------------------------
+# fire-config工具
+## 设置ssh
+* 上电启动开发板，开发板默认开启ssh服务，可通过指令`sudo systemctl status ssh`查看
+* 确保网络连接正常(wifi正确配置后才能使用)，可通过指令`ifconfig`查看ip地址
+* 使用ssh客户端登录
+  * vscode：安装Remote-SSH插件，使用"ctrl+shift+p"快捷键打开命令面板，输入"Remote-SSH"迅速找到"Remote-ssh:connect to host"
+  * 选择"Add New SSH Host"
+  * 根据开发板ip，在ssh登录界面输入登录命令
+  * 选择配置文件保存主机ip和用户名
+  * 提示检查主机公钥指纹，选择"continue"
+  * 输入主机用户密码
+  * 登录成功后，在菜单栏打开"Terminal"，新建终端
+  * 输入"sudo fire-config"命令，选择"SSH-connect"
+  * 系统提示"Would you like the SSH server to be enabled?"，选择< Yes > 或< No >来分别对ssh进行使能和禁止即可
+## fire-config刷机
+1. 开发板正常启动后，在串口登录debian系统
+2. 执行"sudo fire-config"，选择"fisher"项
+3. 系统提示"Would you like the flasher to be enabled?"，选择< Yes >
+4. 系统提示"The flasher is enabled"，选择< OK >
+5. 返回"fire-config"初始界面，选择< Finsh >
+6. 系统提示"Would you like to reboot now?"，选择< Yes >
+7. 系统自动重启
+8. 重启的系统将自动进行eMMc或者nandflash刷机
+9. 刷机过程大约2～3分钟，刷机完成后，控制台会重新进入串口登录页面，此时观察开发板led灯，若led持续闪烁，说明刷机成功
+10. 刷机成功后，调整拨码开关，重新上电启动
+* 使用读卡器将sd卡接入到电脑，打开sd卡boot分区，修改该分区的uEnv.txt文件，修改"#flash_firmware=enable"，去掉"#"即可使能自动烧录
+## fire-config连接wifi
+* wifi和sd卡共用sdio接口， 进行配置wifi之前，要先通过fire-config工具刷机，确认开发板可以从nandflash或eMMc正常启动
+* 刷机完成后，修改跳线帽连接方式
+    1. 在终端执行"sudo fire-config"命令，选择"wifi"项
+    2. 系统提示"Would you like the wifi interface to be enabled?"，选择< Yes >项，使能wifi模块
+    3. 系统提示"The wifi interface is enabled"，选择< OK >项返回菜单
+    4. 在主菜单选择< Finish >项， 系统提示"Would you like to reboot now?"，选择< Yes >项，等待系统重启。此时wifi驱动模块和wifi自动连接服务已配置完成
+    5. 系统重启后，继续在系统中执行"sudo fire-config"命令，选择"wifi_scan"项，系统会扫描所有周围的无线网络，并在界面显示wifi的的名字和信号强弱；若暂时没有识别，可以多次扫描
+    6. 确保系统搜索到目标wifi后，选择< OK >项返回主菜单，选择"wifi_setting"项
+    7. 输入目标wifi账号和密码，输入完成后选择< OK >
+    8. 选择主菜单< Finish >项，退出fire-config工具，执行"ifconfig"命令，可以看到开发板wifi的ip地址已经分配成功
