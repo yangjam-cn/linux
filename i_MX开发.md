@@ -33,6 +33,13 @@
   - [设置ssh](#设置ssh)
   - [fire-config刷机](#fire-config刷机)
   - [fire-config连接wifi](#fire-config连接wifi)
+- [挂载NFS网络文件系统](#挂载nfs网络文件系统)
+  - [网络文件系统简介](#网络文件系统简介)
+  - [使用NFS实验环境架构](#使用nfs实验环境架构)
+  - [搭建NFS环境](#搭建nfs环境)
+    - [连接到局域网络](#连接到局域网络)
+    - [开发主机开启NFS服务](#开发主机开启nfs服务)
+  - [安装NFS客户端](#安装nfs客户端)
 
 <!-- /TOC -->
 # EBF6ULL Pro硬件资源
@@ -194,3 +201,57 @@
     6. 确保系统搜索到目标wifi后，选择< OK >项返回主菜单，选择"wifi_setting"项
     7. 输入目标wifi账号和密码，输入完成后选择< OK >
     8. 选择主菜单< Finish >项，退出fire-config工具，执行"ifconfig"命令，可以看到开发板wifi的ip地址已经分配成功
+
+------------------------------
+# 挂载NFS网络文件系统
+## 网络文件系统简介
+* 开启NFS服务后，客户端访问服务器共享的文件时如同访问本地存储器上的文件，对于上层应用来说没有任何区别，在嵌入式开发时，常利用这个特性在主机上共享文件
+  * 在NFS服务器上编译应用软件，客户端(开发板)通过NFS访问并运行应用程序
+  * 把NFS作为根文件系统来启动
+![NFS](/picture/NFS.png "NFS")
+## 使用NFS实验环境架构
+![NFS实验环境架构](/picture/NFS实验环境架构.png "NFS实验环境架构")
+* 在此环境中，开发板与开发主机接入到同一个局域网中，然后开发主机提供NFS服务，开发板通过NFS与开发主机连接共享文件。开发主机生成的目标板应用程序放在NFS的共享文件夹内，开发板访问该文件夹执行应用程序进行测试
+* 另外开发主机与开发板通过串口连接，使用串口终端控制开发板
+## 搭建NFS环境
+1. 连接网络
+2. 主机开启NFS服务
+3. 开发板挂载文件系统
+### 连接到局域网络
+* 虚拟机网络配置改成“桥接模式”
+* 连接好网络后开发主机和开发板之间进行互ping测试，以保证网络畅通
+### 开发主机开启NFS服务
+* 安装NFS服务 `sudo apt install nfs-kernel-server`
+* 配置NFS
+  * 安装NFS服务后，会新增一个/etc/exports文件，NFS根据它配置运行。在/etc/exports文件末尾增加如下语句并保存
+  ```bash
+  /home/youngjam/imx6 192.168.0.0/24(rw,sync,all_squash,anonuid=1000,no_subtree_check)
+  ```
+    1. /home/....：要共享的开发主机目录
+    2. 192.168.0.0/24：配置谁可以访问，其中的/24是掩码，即0xFF.FF.FF.00，即掩码是255.255.255.0。结合前面表示此处配置IP为192.168.0.*的主机均可以访问该目录，即局域网上的所有主机
+    3. 配置域也可以替换为开发板主机名，则仅此开发板主机能访问该共享目录
+    4. rw：表示客户机的权限，rw表示可读写，具体的权限还受rwx及用户身份影响
+    5. sync：资料同步写入到内存和硬盘中
+    6. anonuid=1000：将客户机的用户映射成指定的本地用户id
+    7. anongid=1000：将客户机的用户映射成指定的本地用户组id
+    8. no_subtree_check：不检查子目录权限
+* 创建共享目录，为了确保共享配置有效，创建指定的共享目录
+* 更新exports配置 `sudo exportfs -arv`
+  * -a：全部mount或umount文件/etc/exorts中的内容
+  * -r：重新mount文件/etc/exports中的共享内容
+  * -u：umount目录
+  * -v：在exportfs的时候，将详细的信息输出到屏幕上
+* 查看NFS共享情况 `showmount -e`
+## 安装NFS客户端
+* 开发板安装NFS客户端 `sudo apt install nfs-common -y`
+* 查看NFS服务器共享目录 `showmount -e + "NFS服务器IP"`
+* 临时挂载NFS文件系统 
+  ```bash
+  sudo mount -t nfs 192.168.0.101:/home/youngjam/imx6 /mnt
+  ```
+    * -t nfs：指定挂载的文件格式为nfs
+    * 192.168.0.101：指定NFS服务器的IP地址
+    * /home/...：指定共享目录
+    * /mnt：本地挂载目录
+    * 若挂载成功，则终端不会有输出，linux的哲学思想是"没有消息就是好消息"
+  * 取消挂载(不要在mnt目录执行，会提示"device is busy") `sudo umount /mnt`
