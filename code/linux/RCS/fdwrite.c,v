@@ -1,0 +1,83 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	2020.08.31.10.20.16;	author youngjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@read && write.
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+int main(void)
+{
+    int fdsrc, fdnull, fdtmp, numbytes;
+    int flags = O_CREAT | O_TRUNC | O_WRONLY;
+    char buf[10];
+
+    if ((fdsrc = open("fdwrite.c", O_RDONLY, 06444)) < 0)
+    {
+        perror("open fdwrite.c");
+        exit(EXIT_FAILURE);
+    }
+
+    if ((fdnull = open("/dev/null", O_RDONLY, 0644)) < 0)
+    {
+        perror("open /dev/null");
+        close(fdsrc);    /*null打开失败,退出前,关闭fdsrc文件*/
+        exit(EXIT_FAILURE);
+    }
+
+    /*以只读的方式打开null文件*/
+    if ((fdtmp = open("/tmp/foo.bar", flags, 0644)) < 0)
+    {
+        perror("open /tmp/foo.bar");
+        close(fdsrc);
+        close(fdnull);
+        exit(EXIT_FAILURE);
+    }
+
+    printf("%d\t%d\t%d\n", fdsrc, fdnull, fdtmp);
+
+    /*从fdsrc中每次读取10个字节的数据到buf中*/
+    /*当独到文件尾部EOF返回0,读取失败返回-1*/
+    while ((numbytes = read(fdsrc, buf, 10)) > 0)
+    {
+        /*将buf中10个字节数据写到fdnull中*/
+        if (write(fdnull, buf, 10) < 0)
+        {
+            perror("write /dev/null");
+        }
+
+        /*写到fdtmp中*/
+        if (write(fdtmp, buf, numbytes) < 0)
+        {
+            perror("write /tmp/foo.bar");
+        }
+    }
+
+    close(fdsrc);
+    close(fdnull);
+    close(fdtmp);
+
+    exit(EXIT_SUCCESS);
+}@

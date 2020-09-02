@@ -1,0 +1,42 @@
+head	1.1;
+access;
+symbols;
+locks
+	youngjam:1.1; strict;
+comment	@// @;
+
+
+1.1
+date	2020.08.30.12.08.48;	author youngjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@demo
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <opencv2/opencv.hpp>
+#include <iostream>
+
+int main()
+{
+    using namespace std;
+    using namespace cv;
+
+    Mat grayim(800, 600, CV_8UC1);
+    for (int i = 0; i < grayim.cols; ++i)
+        for (int j = 0; j < grayim.rows; ++j)
+            grayim.at<uchar>(i, j) = (i + j) % 255;
+
+    imwrite("test.jpg", grayim);
+    waitKey(0);
+    // cout << grayim.rows << endl;
+    return 0;
+}@

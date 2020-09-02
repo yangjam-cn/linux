@@ -1,0 +1,60 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	2020.08.31.07.00.11;	author youngjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test dl.
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <stdio.h>
+#include <stdlib.h>
+#include <dlfcn.h>
+
+int main(void)
+{
+    void *handle;
+    void (*errFunc)(const char *fmt, ...);
+    const char *errMsg;
+    FILE *pf;
+
+    handle = dlopen("./liberr.so", RTLD_NOW);    /*加载共享库*/
+    /*检查共享对象所在文件是否打开成功*/
+    if (handle == NULL)
+    {
+        fprintf(stderr, "Failed to load liberr.so: %s\n", dlerror());
+        exit(EXIT_FAILURE);
+    }
+
+    /*返回描述最近发生错误的字符串,将错误字符串置NULL;没有错误时返回NULL*/
+    dlerror();    /*清除错误信息*/
+    errFunc = dlsym(handle, "err_ret");    /*加载共享对象*/
+    /*检查对象是否加载成功,否则将错误信息传给errMsg*/
+    if ((errMsg = dlerror()) != NULL)
+    {
+        fprintf(stderr, "Didn't find err_ret: %s\n", errMsg);
+        exit(EXIT_FAILURE);
+    }
+
+    if ((pf = fopen("foo", "r")) == NULL)
+    {
+        errFunc("Couldn't open foo.");
+    }
+
+    dlclose(handle);    /*关闭共享库*/
+    exit(EXIT_SUCCESS);
+}@
