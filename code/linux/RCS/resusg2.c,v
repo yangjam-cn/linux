@@ -1,0 +1,72 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	2020.09.02.12.03.37;	author youngjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@resusage .
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <stdio.h>
+#include <stdlib.h>
+#include <sys/time.h>
+#include <sys/resource.h>
+#include <time.h>
+#include <unistd.h>
+
+void err_quit(char *);
+void print_res(char *, long);
+
+int main(void)
+{
+    struct rusage usage;
+
+    system("grep include ../linux/* >include.txt 2>error.txt");
+
+    if ((getrusage(RUSAGE_SELF, &usage)) == -1)
+        err_quit("getrusage");
+    
+    puts("parent times:");
+    print_res("\tuser CPU: ", usage.ru_utime.tv_usec);
+    print_res("\tsys  CPU: ", usage.ru_stime.tv_usec);
+    puts("parent memory stats:");
+    print_res("\tminor faults: ", usage.ru_minflt);
+    print_res("\tmajor faults: ", usage.ru_majflt);
+
+    if ((getrusage(RUSAGE_CHILDREN, &usage)) == -1)
+        err_quit("getrusage");
+    
+    puts("child times:");
+    print_res("\tuser CPU: ", usage.ru_utime.tv_usec);
+    print_res("\tsys  CPU: ", usage.ru_stime.tv_usec);
+    puts("child memory stats:");
+    print_res("\tminor faults: ", usage.ru_minflt);
+    print_res("\tmajor faults: ", usage.ru_majflt);
+
+    exit(EXIT_SUCCESS);
+}
+
+void err_quit(char *str)
+{
+    perror(str);
+    exit(EXIT_FAILURE);
+}
+
+void print_res(char *str, long resval)
+{
+    printf("%s %ld\n", str, resval); 
+}@

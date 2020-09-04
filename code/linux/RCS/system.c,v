@@ -1,0 +1,53 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@ * @;
+
+
+1.1
+date	2020.09.02.13.05.04;	author youngjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@system
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <stdlib.h>
+#include <stdio.h>
+
+int main(void)
+{
+    int retval;
+
+    retval = system("ls -l");
+
+    if (127 == retval)    /*bin/sh没找到*/
+    {
+        fprintf(stderr, "/bin/sh not available\n");
+        exit(127);
+    }
+    else if (-1 == retval)   /*函数执行出错*/
+    {
+        perror("system");
+        exit(EXIT_FAILURE);
+    }
+    else if (0 != retval)    /*system参数传递为NULL*/
+    {
+        fprintf(stderr, "command returned %d\n", retval);
+        perror("ls");
+    }
+    else
+    {
+        puts("command successfully executed");
+    }
+    exit(EXIT_SUCCESS);
+}@

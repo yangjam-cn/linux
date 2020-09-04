@@ -1,0 +1,38 @@
+head	1.1;
+access;
+symbols;
+locks
+	youngjam:1.1; strict;
+comment	@ * @;
+
+
+1.1
+date	2020.09.03.04.19.14;	author youngjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@func arg
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <stdio.h>
+#include <unistd.h>
+
+int main(int argc, char **argv)
+{
+    while (argc > 0)
+    {
+        printf("%s\n", argv[--argc]);
+    }
+    printf(" pid = %d\n", getpid());
+    printf("ppid = %d\n", getppid());
+    printf(" uid = %d\n", getuid());
+    return 0;
+}@

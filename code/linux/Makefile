@@ -1,14 +1,20 @@
 files=$(obj)
 object=test
-CC=g++
+type=$(suffix $(files))
+ifeq ($(type), "cpp")
+	CC=g++
+	pre=$(patsubst %.cpp, %.i, $(files))
+else
+	CC=gcc
+	pre=$(patsubst %.c, %.i, $(files))
+endif
 
-pre=$(patsubst %.cpp, %.i, $(files))
 coms=$(patsubst %.i, %.s, $(pre))
 como=$(patsubst %.s, %.o, $(coms))
 
 
 $(object): $(como)
-	$(CC) $^ -o $@
+	$(CC) $^ -lpthread -o $@
 $(como): $(coms)
 	$(CC) -c $^ -o $@
 $(coms): $(pre)
@@ -18,4 +24,4 @@ $(pre): $(files)
 
 .PHONY: clean
 clean:
-	rm *.i *.s *.o test
+	rm *.i *.s *.o test && clear

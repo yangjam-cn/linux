@@ -1,0 +1,59 @@
+head	1.1;
+access;
+symbols;
+locks
+	youngjam:1.1; strict;
+comment	@ * @;
+
+
+1.1
+date	2020.09.03.07.12.44;	author youngjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@sigset
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <signal.h>
+#include <sys/signalfd.h>
+#include <sys/types.h>
+#include <sys/unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+void err_quit(const char *);
+
+int main(void)
+{
+    sigset_t newSet;
+
+    if ((sigemptyset(&newSet)) < 0)
+        err_quit("sigemptyset");
+    if ((sigaddset(&newSet, SIGCHLD)) < 0)
+        err_quit("sigaddset");
+    if (sigismember(&newSet, SIGCHLD))
+        puts("SIGCHLD is in signal mask");
+    else
+        puts("SIGCHLD not in signal mask");
+    if (sigdelset(&newSet, SIGCHLD) < 0)
+        err_quit("sigdelaet");
+    if (sigismember(&newSet, SIGCHLD))
+        puts("SIGCHLD is in signal mask");
+    else
+        puts("SIGCHLD not in signal mask");
+    exit(EXIT_SUCCESS);
+}
+
+void err_quit(const char *msg)
+{
+    perror(msg);
+    exit(EXIT_FAILURE);
+}@
