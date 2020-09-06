@@ -1,7 +1,7 @@
 files=$(obj)
 object=test
 type=$(suffix $(files))
-ifeq ($(type), "cpp")
+ifeq ($(type), .cpp)
 	CC=g++
 	pre=$(patsubst %.cpp, %.i, $(files))
 else
