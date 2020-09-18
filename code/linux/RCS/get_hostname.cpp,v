@@ -1,0 +1,43 @@
+head	1.1;
+access;
+symbols;
+locks
+	youngjam:1.1; strict;
+comment	@// @;
+
+
+1.1
+date	2020.09.09.01.22.32;	author youngjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@get hostname
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <iostream>
+#include <cstring>
+#include <unistd.h>
+
+int main(void)
+{
+    char hostname[30];
+    int flag = 0;
+
+    memset(hostname, 0x00, sizeof(hostname));
+
+    if ((flag = gethostname(hostname, sizeof(hostname))) < 0)
+    {
+        perror("gethostname");
+        exit(EXIT_FAILURE);
+    }
+    printf("hostname = %s\n", hostname);
+    exit(EXIT_SUCCESS);
+}@
