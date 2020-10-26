@@ -1,0 +1,55 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.06.02.35.40;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test signal function
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <iostream>
+#include <signal.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+void err(const char *msg)
+{
+    perror(msg);
+    std::cout << strerror(errno) << '\n';
+    exit(1);
+}
+
+void sigusr1(int sig)
+{
+    std::cout << "got the SIGUSR1 signal...\n";
+    exit(0);
+}
+
+int main(void)
+{
+    if (signal(SIGINT, SIG_IGN) == SIG_ERR)
+        err("cannot reset the SIGINT signal handler.\n");
+
+    if (signal(SIGUSR1, sigusr1) == SIG_ERR)
+        err("cannot reset the SIGUSR1 signal handler.\n");
+
+    pause();
+    return 0;
+}
+@

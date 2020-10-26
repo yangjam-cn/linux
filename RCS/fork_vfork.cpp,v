@@ -1,0 +1,78 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.05.06.49.28;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test fork and vfork
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <iostream>
+#include <unistd.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <cstring>
+#include <wait.h>
+
+int gi_var = 0;
+
+void err(const char *msg)
+{
+    perror(msg);
+    std::cout << strerror(errno) << '\n';
+    exit(-1);
+}
+
+int main(void)
+{
+    int var = 1;
+    pid_t pid;
+    int state;
+
+    if ((pid = fork()) < 0)
+        err("fork.\n");
+    else if (pid == 0)
+    {
+        ++gi_var;
+        ++var;
+        std::cout << "Process ID: " << getpid() << " gi_var = " << gi_var
+                       << " var = " << var << std::endl;
+        exit(0);
+    }
+    if (waitpid(pid, &state, 0) == -1)
+        err("waitpid.\n");
+    std::cout << "Process ID: " << getpid() << " gi_var = " << gi_var
+                   << " var = " << var << std::endl;
+
+    if ((pid = vfork()) < 0)
+        err("fork.\n");
+    else if (pid == 0)
+    {
+        ++gi_var;
+        ++var;
+        std::cout << "Process ID: " << getpid() << " gi_var = " << gi_var
+                       << " var = " << var << std::endl;
+        _exit(0);
+    }
+    if (waitpid(pid, &state, 0) == -1)
+        err("waitpid.\n");
+    std::cout << "Process ID: " << getpid() << " gi_var = " << gi_var
+                   << " var = " << var << std::endl;
+
+    return 0;
+}
+@

@@ -1,0 +1,163 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.04.12.18.49;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test myself ls cmommand
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <iostream>
+#include <cstdlib>
+#include <cstring>
+#include <malloc.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <dirent.h>
+
+using std::cout;
+
+const int N_BITS = 3;
+
+typedef struct DIR_LL
+{
+    char d_name[2556];
+    struct DIR_LL *next;
+}dirlnlst;
+
+typedef struct item_info
+{
+    unsigned long inode;
+    char permission[11];
+    int ower;
+    int group;
+    off_t size;
+    time_t mod_time;
+    char name[256];
+}info;
+
+dirlnlst* get_dir_detail(char *dirname)
+{
+    DIR *dir;
+    dirent *drt;
+
+    if ((dir = opendir(dirname)) == nullptr)
+    {
+        perror("cann't open directory");
+        exit(-1);
+    }
+
+    dirlnlst *dir_head = nullptr;
+    dirlnlst *cur_item = nullptr;
+
+    while ((drt = readdir(dir)) != nullptr)
+    {
+        if (strcmp(drt->d_name, ".")  == 0 || strcmp(drt->d_name, "..") == 0)
+            continue;
+
+        dirlnlst *new_item = (dirlnlst *)malloc(sizeof(dirlnlst));
+
+        if (cur_item != nullptr)
+            cur_item->next = new_item;
+        cur_item = new_item;
+
+        if (dir_head == nullptr)
+            dir_head = cur_item;
+
+        strcpy(cur_item->d_name, drt->d_name);
+    }
+
+    cur_item->next = nullptr;
+    closedir(dir);
+    return dir_head;
+}
+
+void print_file_info(dirlnlst **dir_head)
+{
+    const char *perm[] = {"---", "--x", "-w-", "-wx", "r--", "r-x", "rw-", "rwx"};
+    unsigned int mask = 0700;
+    struct stat file_stat;
+    dirlnlst *cur_item = *dir_head, *temp;
+
+    while (cur_item != nullptr)
+    {
+        mask = 0700;
+        info file_info;
+        if (stat(cur_item->d_name, &file_stat) == -1)
+        {
+            perror("cann't get information of the file!");
+            cur_item = cur_item->next;
+            continue;
+        }
+
+        if (S_ISREG(file_stat.st_mode))
+            file_info.permission[0] = '-';
+        if (S_ISDIR(file_stat.st_mode))
+            file_info.permission[0] = 'd';
+
+        int i = 3;
+        int j = 0;
+        while (i > 0)
+        {
+            file_info.permission[1 + j * 3] = perm[(file_stat.st_mode & mask) >> (i - 1) * N_BITS][0];
+            file_info.permission[2 + j * 3] = perm[(file_stat.st_mode & mask) >> (i - 1) * N_BITS][1];
+            file_info.permission[3 + j * 3] = perm[(file_stat.st_mode & mask) >> (i - 1) * N_BITS][2];
+            j++;
+            i--;
+            mask >>= N_BITS;
+        }
+
+        file_info.permission[10] = '\0';
+        file_info.ower = file_stat.st_uid;
+        file_info.group = file_stat.st_gid;
+        file_info.mod_time = file_stat.st_atime;
+        file_info.size = file_stat.st_size;
+        file_info.inode = file_stat.st_ino;
+        strcpy(file_info.name, cur_item->d_name);
+
+        cout << file_info.inode << "  "
+                << file_info.permission << "  "
+                << file_info.ower << "  "
+                << file_info.group << "  "
+                << file_info.size << "  "
+                << ctime(&file_info.mod_time) << "  "
+                << file_info.name << '\n';
+
+        temp = cur_item;
+        cur_item = cur_item->next;
+        free(temp);
+    }
+    *dir_head = nullptr;
+}
+
+int main(int argc, char *argv[])
+{
+    dirlnlst *head = nullptr;
+    if (argc == 2)
+    {
+        head = get_dir_detail(argv[1]);
+    }
+    else
+    {
+        head = get_dir_detail((char *)".");
+    }
+    print_file_info(&head);
+    return 0;
+}
+@

@@ -1,0 +1,72 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.09.13.38.40;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@watch shm_info
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <sys/ipc.h>
+#include <sys/shm.h>
+#include "my_err.cpp"
+
+#define LINUX_ENV
+
+// #ifdef LINUX_ENV
+// #define _GNU_SOURCE
+// #endif
+
+int main(void)
+{
+    key_t key;
+    int proj_id;
+    int shmid;
+    struct shmid_ds buffer;
+
+    /* 创建ipc资源 */
+    proj_id = 2;
+    key = ftok("/home/yungjam/Documents/linux", proj_id);
+    if (-1 == key)
+        err("cannot generate the key");
+
+    /* 创建共享内存段 */
+    shmid = shmget(key, 1024, IPC_CREAT | 0666);
+    if (-1 == shmid)
+        err("cannot create a shared memory segment");
+
+    /* 复制shmid参数 */
+    shmctl(shmid, IPC_STAT, &buffer);
+
+    printf("======shared memory info======\n");
+    printf("effective user id: %d\n", buffer.shm_perm.uid);
+    printf("shared memory's creator user id: %d\n", buffer.shm_perm.cuid);
+    printf("access mode: %o\n", buffer.shm_perm.mode);
+    printf("No. of current attaches: %ld\n", buffer.shm_nattch);
+
+    #ifdef LINUX_ENV
+    shmctl(shmid, SHM_INFO, &buffer);
+    struct shm_info *mem_info;
+    mem_info = (struct shm_info *)(&buffer);
+    printf("# of currently existing segmets: %d\n", mem_info->used_ids);
+    printf("Total number of shared memory pages: %ld\n", mem_info->shm_tot);
+    printf("# of resident shared memory pages: %ld\n", mem_info->shm_rss);
+    printf("# of swaped shared memory pages: %ld\n", mem_info->shm_swp);
+    #endif
+    return 0;
+}
+@

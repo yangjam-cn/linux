@@ -1,0 +1,74 @@
+head	1.1;
+access;
+symbols;
+locks
+	yungjam:1.1; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.05.05.49.56;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@watch program address.
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+/*
+ * etext: 代码段结束位置
+ * edata: 初始化数据段结束位置
+ * end: 数据段结束位置
+ */
+extern int etext, edata, end;
+
+const char *g_pstr = "global string\n";
+char g_buffer[20];
+
+inline void display_addr(const char *p, long long addr)
+{
+    printf("Name : %s, Address : %0llx\n", p, addr);
+}
+
+void display_var(const char *p)
+{
+    char *buffer1;
+
+    display_addr("buffer1 address", (long long)(&buffer1));
+
+    buffer1 = (char *)malloc(strlen(p) + 1);
+    strcpy(buffer1, p);
+    printf("buffer1: %s\n", buffer1);
+    free(buffer1);
+}
+
+int main(void)
+{
+    int i = 0;
+
+    printf("Addr etext: %0llx\n", (long long)(&etext));       /* 55f7fa255445 */
+    printf("Addr edata: %0llx\n", (long long)(&edata));     /* 55f7fa258018 */
+    printf("Addr end: %0llx\n", (long long)(&end));          /* 55f7fa258048 */
+
+    display_addr("function main()", (long long)main);      /* 55f7fa255285 */
+    display_addr("function display_var()", (long long)display_var); /* 2551e9 */
+    display_addr("g_pstr address", (long long)(&g_pstr)); /* 55f7fa258010 */
+    display_addr("g_buffer address", (long long)(&g_buffer)); /* 55f7fa258030 */
+    display_addr("i address", (long long)(&i));               /* 7ffedc3ba384 */
+
+    display_var(g_pstr);
+    return 0;
+}
+
+@

@@ -1,0 +1,57 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.05.07.18.44;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@diffrence of exit and _exit
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <iostream>
+#include <cstdlib>
+#include <unistd.h>
+
+using std::cout;
+
+void func1(void)
+{
+    cout << __func__ << '\n';
+}
+
+void func2(void)
+{
+    cout << __func__ << '\n';
+}
+
+void func3(void)
+{
+    cout << __func__ << '\n';
+}
+
+
+int main(void)
+{
+    /* 注册回调函数，调用exit函数时执行，执行顺序与注册顺序相反 */
+    atexit(func1);
+    atexit(func3);
+    atexit(func2);
+    cout << __func__ << '\n';
+    // exit(0);
+    // return 0;
+    _exit(0);
+}
+@

@@ -1,0 +1,115 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.06.09.40.42;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test message queue and msgsnd function.
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <stdio.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+
+/* 消息 */
+typedef struct
+{
+    long mtype;    /* 消息类型，大于0的任意整数 */
+    char mtext[BUFSIZ];    /* 消息文本 */
+} msg_info;
+
+void err(const char *msg)
+{
+    perror(msg);
+    exit(1);
+}
+
+/* 创建消息队列 */
+int creat_msg_queue()
+{
+    key_t key;    /* IPC资源关键字 */
+    int proj_id;    /* 用于生成消息队列标识，随意设置 */
+    int msqid;    /* 消息队列标识 */
+    struct msqid_ds buffer;    /* 保存消息队列属性 */
+
+    /* 生成IPC资源关键字 */
+    proj_id = 2;
+    if ((key = ftok("/home/yungjam/Documents/linux", proj_id)) == -1)
+        err("cannot generate the IPC key.\n");
+
+    /* 创建消息队列 */
+    if ((msqid = msgget(key, IPC_CREAT | 0660)) == -1)
+        err("cannot create message queue resourse.\n");
+
+    return msqid;
+}
+
+/* 发送消息 */
+int send_msg(int msqid, const char *msg)
+{
+    int result;    /* 发送结果 */
+    msg_info buf;    /* 待发送消息 */
+
+    buf.mtype = 100;
+    strcpy(buf.mtext, msg);
+
+    /* 发送消息 */
+    if ((result = msgsnd(msqid, &buf, strlen(msg), 0)) == -1)
+        err("cannot get the state of the message queue.\n");
+
+    return result;
+}
+
+/* 查看消息队列信息 */
+int show_msg_queue_stat(int msqid)
+{
+    struct msqid_ds buffer;    /* 保存消息队列相关信息 */
+    int flg;
+
+    if ((flg = msgctl(msqid, IPC_STAT, &buffer)) == -1)
+        err("cannot get the status of the message queue.\n");
+
+    printf("======message queue info======\n");
+    printf("effective user id: %d\n", buffer.msg_perm.uid);
+    printf("effective qroup id: %d\n", buffer.msg_perm.gid);
+    printf("message queue's creator user id: %d\n", buffer.msg_perm.cuid);
+    printf("access mode: %o\n", buffer.msg_perm.mode);
+    printf("Maximum number of bytes allowed in mesage queue: %ld\n",
+            buffer.msg_qbytes);
+    printf("current number of bytes in message queue: %ld\n",
+            buffer.__msg_cbytes);
+    printf("current number of message in message queue: %ld\n", buffer.msg_qnum);
+
+    return 0;
+}
+
+int main(int argc, char **argv)
+{
+    int msqid;
+
+    msqid = creat_msg_queue();
+    send_msg(msqid, "test message");
+    show_msg_queue_stat(msqid);
+
+    return 0;
+}
+@

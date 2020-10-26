@@ -1,0 +1,103 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.06.05.54.01;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test bidirection pipe
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/unistd.h>
+
+/* 输出错误提示并正常终止进程 */
+void err(const char *msg_err)
+{
+    perror(msg_err);
+    printf("%s\n", strerror(errno));
+    exit(1);
+}
+
+int main(int argc, char *argv[])
+{
+    int fd_ptoc[2];
+    int fd_ctop[2];
+    pid_t pid;
+    char msg[BUFSIZ];
+
+    /* 检查输入参数 */
+    if (argc != 2)
+    {
+        printf("usage: %s message\n", argv[0]);
+        exit(1);
+    }
+
+    /* 创建管道 */
+    if (pipe(fd_ptoc) == -1)
+        err("cannot create the pipe of parent write to child.\n");
+    if (pipe(fd_ctop) == -1)
+        err("cannot create the pipe of child write to child.\n");
+
+    /* 创建子进程 */
+    if ((pid = fork()) == -1)
+        err("cannot create child process.\n");
+    else if (0 == pid)    /* 子进程 */
+    {
+         close(fd_ptoc[1]);    /* 关闭写通道 */
+         close(fd_ctop[0]);    /* 关闭读通道 */
+
+         if (read(fd_ptoc[0], msg, BUFSIZ) == -1)
+            err("child process cannot read data from pipe.\n");
+        else   /* read successful */
+        {
+            printf("child process recived the message: %s\n", msg);
+
+            sprintf(msg, "process: %ld recived message.", (long)getpid());
+            if (write(fd_ctop[1], msg, strlen(msg)) == -1)
+                err("child process cannot write data to pipe.\n");
+        }
+
+        exit(0);
+    }    /* end child process */
+    else    /* parent process */
+    {
+        close(fd_ptoc[0]);
+        close(fd_ctop[1]);
+
+        if (write(fd_ptoc[1], argv[1], strlen(argv[1])) == -1)
+            err("parent process cannot write data to pipe.\n");
+        else    /* write successful */
+        {
+            sleep(1);
+            if (read(fd_ctop[0], msg, BUFSIZ) == -1)
+                err("parent process cannot read data from pipe.\n");
+            else    /* read successful */
+                printf("parent process recived message: %s\n", msg);
+        }
+
+        wait(nullptr);
+        close(fd_ptoc[1]);
+        close(fd_ctop[0]);
+        exit(0);
+    }    /* end parent process */
+}
+@

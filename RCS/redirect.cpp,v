@@ -1,0 +1,71 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.06.06.34.32;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@redirec input/ouput
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <cstdio>
+#include <cstdlib>
+#include <sys/types.h>
+#include <unistd.h>
+#include <limits.h>
+
+
+void err(const char *msg_err)
+{
+    perror(msg_err);
+    exit(1);
+}
+
+int main(int argc, char **argv)
+{
+    FILE *stream_in, *stream_out;
+    int nBytes;
+    char buffer[BUFSIZ];
+
+    if (argc != 3)
+    {
+        printf("usage: %s cmd1 cmd2", argv[0]);
+        exit(1);
+    }
+
+    /* 创建管道 */
+    if ((stream_in = popen(argv[1], "r")) == nullptr)
+        err("call popen function fail.\n");
+    if ((stream_out = popen(argv[2], "w")) == nullptr)
+        err("call popen function fail.\n");
+
+    /* 刷新写入端 */
+    fflush(stream_out);
+
+    /* 读取cmd1的输出写入到到cmd2的输入 */
+    nBytes = fread(buffer, sizeof(char), PIPE_BUF, stream_in);
+    while (nBytes > 0)
+    {
+        fwrite(buffer, sizeof(char), nBytes, stream_out);
+        nBytes = fread(buffer, sizeof(char), PIPE_BUF, stream_in);
+    }
+
+    pclose(stream_out);
+    pclose(stream_in);
+
+    return 0;
+}
+@

@@ -1,0 +1,71 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.10.03.11.41;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test pthread_join function
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <pthread.h>
+#include <unistd.h>
+#include "my_err.cpp"
+
+struct thread_param
+{
+    char info;
+    int num;
+};
+
+void *thread_fun(void *arg_ptr)
+{
+    struct thread_param *param_ptr;
+
+    param_ptr = (thread_param *)arg_ptr;
+
+    for (int i = 0; i < param_ptr->num; ++i)
+        printf("%i: %c\n", i, param_ptr->info);
+
+    return nullptr;
+}
+
+int main(void)
+{
+    pthread_t tid_1, tid_2;
+    struct thread_param info_1;
+    struct thread_param info_2;
+    int ret;
+
+    info_1.info = 'T';
+    info_1.num = 2;
+    if ((ret = pthread_create(&tid_1, nullptr, thread_fun, &info_1)) == -1)
+        err("cannot create new thread");
+
+    info_2.info = 'S';
+    info_2.num = 3;
+    if ((ret = pthread_create(&tid_2, nullptr, thread_fun, &info_2)) == -1)
+        err("cannot create new thread");
+
+    if (pthread_join(tid_1, nullptr) != 0)
+        err("call pthread_join function fail");
+
+    if (pthread_join(tid_2, nullptr) != 0)
+        err("call pthread_join function fail");
+
+    return 0;
+}
+@

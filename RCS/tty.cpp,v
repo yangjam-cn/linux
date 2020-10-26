@@ -1,0 +1,96 @@
+head	1.1;
+access;
+symbols;
+locks
+	yungjam:1.1; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.05.02.38.29;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test serial
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <iostream>
+#include <cstdlib>
+#include <cstring>
+#include <errno.h>
+#include <unistd.h>
+#include <termios.h>
+#include <fcntl.h>
+#include <sys/types.h>
+
+int main(int argc, char *argv[])
+{
+    char *name;
+    termios term;
+    speed_t iSpeed, oSpeed;
+    int fd;
+
+    if (argc != 2)
+        fd = STDIN_FILENO;
+    else
+    {
+        if (strlen(argv[1]) == 1)
+            fd = atoi(argv[1]);
+        else
+        {
+            fd = open(argv[1], O_NOCTTY);
+            if (fd == -1)
+            {
+                perror("cann't open the file.\n");
+                exit(-1);
+            }
+        }
+    }
+
+    /* 获取终端设备名 */
+    if ((name  = ttyname(fd)) == nullptr)
+    {
+        perror("cann't get the name of term!");
+        exit(-1);
+    }
+    std::cout << name << '\n';
+
+    /* 获取串口指向的终端 */
+    if (tcgetattr(fd, &term) == -1)
+    {
+        perror("error in the tcgetattr!\n");
+        exit(-1);
+    }
+
+    /* 获取波特率参数 */
+    iSpeed = cfgetispeed(&term);
+    std::cout << iSpeed << '\n';
+    oSpeed = cfgetospeed(&term);
+    std::cout << oSpeed << '\n';
+
+    /* 设置波特率参数 */
+    speed_t temp = iSpeed;
+    iSpeed = B75;
+    if (cfsetispeed(&term, iSpeed) == -1)
+    {
+        perror(strerror(errno));
+        exit(-1);
+    }
+    iSpeed = cfgetispeed(&term);
+    std::cout << "new speed: " << iSpeed << '\n';
+    cfsetispeed(&term, temp);    /* 还原初始波特率 */
+
+    /* 数据位 */
+    std::cout << "bits: " << std::oct << ((term.c_cflag & 0060) >> 3) << '\n';
+
+    return 0;
+}
+@

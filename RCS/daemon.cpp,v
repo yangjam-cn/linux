@@ -1,0 +1,83 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.05.08.54.20;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test daemon process
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <cstdio>
+#include <cstdlib>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <string.h>
+#include <errno.h>
+
+void err(const char *msg)
+{
+    perror(msg);
+    perror(strerror(errno));
+    exit(-1);
+}
+
+int daemon(int *fds, int nums)
+{
+    pid_t pid;
+
+    /* 创建子进程 */
+    if ((pid = fork()) == -1)
+        err("fork\n");
+    /* 关闭父进程 */
+    if (pid > 0)
+        exit(1);
+
+    /* 创建新会话 */
+    if ((pid = setsid()) == -1)
+        err("setsid.\n");
+
+    /* 切换工作目录 */
+    chdir("/");
+
+    /* 关闭无用文件描述符,重定向标准流 */
+    for (int i = 0; i < nums; i++)
+        close(fds[i]);
+    int fd;
+    if ((fd = open("/dev/null", O_RDWR)) == -1)
+        err("open.\n");
+    dup2(fd, STDIN_FILENO);
+    dup2(fd, STDOUT_FILENO);
+    dup2(fd, STDERR_FILENO);
+    if (fd > 2)
+        close(fd);
+
+    /* 设置文件权限掩码 */
+    umask(0027);
+
+    return 0;
+}
+
+int main(void)
+{
+    daemon(nullptr, 0);
+    sleep(1000);
+
+    return 0;
+}
+@

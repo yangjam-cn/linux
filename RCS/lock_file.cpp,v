@@ -1,0 +1,74 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.09.10.35.44;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test fcntl function
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <fcntl.h>
+#include <unistd.h>
+#include "my_err.cpp"
+const char *test_file = "test_lock";
+
+
+int main(void)
+{
+    int fd;
+    int byte_count;
+    const char *byte_to_write = "A";
+    struct flock region_1;
+    struct flock region_2;
+    int res;
+
+    /* 以读写方式打开，否则无法创建对应的锁 */
+    if ((fd = open(test_file, O_CREAT | O_RDWR, 0666)) == -1)
+        err("cannot open the file.");
+
+    /* 向文件内写入数据 */
+    for (byte_count = 0; byte_count < 100; ++byte_count)
+        write(fd, byte_to_write, 1);
+
+    /* 设置区域1(10~30)为读锁(共享锁) */
+    region_1.l_type = F_RDLCK;
+    region_1.l_whence = SEEK_SET;
+    region_1.l_start = 10;
+    region_1.l_len = 20;
+    region_1.l_pid = getpid();
+
+    /* 设置区域2(40~50)为写锁(独占锁) */
+    region_2.l_type = F_WRLCK;
+    region_2.l_whence = SEEK_SET;
+    region_2.l_start = 40;
+    region_2.l_len = 10;
+    region_2.l_pid = getpid();
+
+    printf("process %d locking file.\n", getpid());
+    /* 对文件加锁 */
+    if ((res = fcntl(fd, F_SETLK, &region_1)) == -1)
+        err("failed to lock region 1.");
+    if ((res = fcntl(fd, F_SETLK, &region_2)) == -1)
+        err("failed to lock region 2.");
+
+    sleep(30);
+    printf("process %d closing file\n", getpid());
+    close(fd);
+    unlink(test_file);
+    return 0;
+}
+@

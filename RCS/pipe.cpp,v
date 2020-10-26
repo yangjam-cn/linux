@@ -1,0 +1,83 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.06.05.20.04;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test pipe function
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <cstdio>
+#include <cstdlib>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <errno.h>
+#include <cstring>
+
+void err(const char *msg)
+{
+    perror(msg);
+    printf("%s\n", strerror(errno));
+    exit(1);
+}
+
+int main(int argc, char *argv[])
+{
+    pid_t pid;
+    int fd[2];
+    char msg[BUFSIZ];
+
+    if (argc != 2)
+    {
+        printf("usage: %s message\n", argv[0]);
+        exit(1);
+    }
+
+    if (pipe(fd) == -1)
+        err("cannot create the IPC pipe.\n");
+
+    if ((pid = fork()) == -1)
+        err("cannot fork the child process.\n");
+    else if (0 == pid)    /* 子进程 */
+    {
+        close(fd[1]);    /* 关闭写端 */
+
+        if (read(fd[0], msg, BUFSIZ) == -1)
+            err("child process cannot read data from pipe.\n");
+        else
+            printf("in child process, recive message: %s\n", msg);
+
+        exit(0);
+    }    /* end child process */
+    else    /* 父进程 */
+    {
+        close(fd[0]);    /* 关闭读端 */
+
+        if (write(fd[1], argv[1], strlen(argv[1])) == -1)
+            err("parent process cannot write data to pipe.\n");
+        else
+            printf("in parent process, send message: %s\n", argv[1]);
+
+        wait(nullptr);    /* 等待子进程结束 */
+        close(fd[1]);
+        exit(0);
+    }    /* end parent process */
+}
+
+
+@

@@ -1,0 +1,69 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.04.06.35.25;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test open and fork function
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@/*
+ * 2020.10.4
+ * 测试open和fork函数
+ * yungjam
+ * ubuntu20.4
+ */
+#include <iostream>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+using std::cout;
+
+int main(void)
+{
+    int fd;
+    char ch;
+
+    if ((fd = open("test.dat", O_RDONLY)) == -1)
+    {
+        perror("can not open the test.dat file");
+        exit(EXIT_FAILURE);
+    }
+
+    if (fork() == -1)
+    {
+        perror("cann't crate child process!");
+        exit(EXIT_FAILURE);
+    }
+
+    read(fd, &ch, 1);
+
+    cout << "Process ID: " << getpid() << " read the character: " << ch << '\n';
+
+    return 0;
+}
+
+/*
+ *Process ID: 17758 read the character: a
+ *Process ID: 17759 read the character: b
+ */
+/*
+ * 父子进程共享文件描述符
+ */
+@

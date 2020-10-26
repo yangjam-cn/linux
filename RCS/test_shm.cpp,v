@@ -1,0 +1,99 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.09.14.15.10;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test shared memoty
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/types.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include "my_err.cpp"
+
+extern int etext, edata, end;
+
+int main(int argc, char *argv[])
+{
+    int shmid;
+    int proj_id;
+    key_t key;
+    int shm_size;
+    char *shm_addr, *addr;
+    pid_t pid;
+
+    if (argc != 3)
+    {
+        printf("usage: %s shared_memory_size info\n", argv[0]);
+        exit(1);
+    }
+
+    shm_size = atoi(argv[1]);
+
+    proj_id = 2;
+    if ((key = ftok("/home/yungjam/Documents/linux", proj_id)) == -1)
+        err("cannot generate IPC key");
+
+    if ((shmid = shmget(key, shm_size, IPC_CREAT | 0666)) == -1)
+        err("cannot crate a shared memory segment");
+
+    addr = (char *)shmat(shmid, nullptr, 0);
+    shm_addr = addr;
+    if (shm_addr == (char *)-1)
+        err("cannot attach the shared memory to process");
+
+    printf("====address info====\n");
+    printf("etext address: %p\n", &etext);
+    printf("edata address: %p\n", &edata);
+    printf("end address: %p\n", &end);
+    printf("shamred memory segment address: %p\n", shm_addr);
+
+    strcpy(shm_addr, argv[2]);
+    printf("the input string is: %s\n", argv[2]);
+
+    printf("before fork, in shared memory segment the string is: %s\n", shm_addr);
+
+    if ((pid = fork()) == -1)
+        err("cannot fork child process");
+
+    if (pid == 0)
+    {
+        printf("in child process, the string is %s\n", shm_addr);
+        printf("modify the content in shared memory\n");
+
+        sprintf(shm_addr, "process %d have change the content of the shared memory.", getpid());
+        _exit(0);
+    }
+    else
+    {
+        wait(nullptr);
+
+        printf("after fork, in shared memory segment the string is: %s\n", shm_addr);
+
+        if (shmdt(shm_addr) == -1)
+            err("cannot release the memory");
+
+        if (shmctl(shmid, IPC_RMID, nullptr) == -1)
+            err("cannot delete existing shared memory segment");
+        return 0;
+    }
+}
+@

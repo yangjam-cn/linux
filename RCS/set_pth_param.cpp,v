@@ -1,0 +1,117 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.10.08.19.26;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@set thread param.
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <pthread.h>
+#include <unistd.h>
+#include "my_err.cpp"
+
+void thread_one_info(void *)
+{
+    for (int i = 0; i < 5; ++i)
+    {
+        printf("in thread1, sleep...\n");
+        sleep(1);
+    }
+    printf("thread %ld: in %s\n", (long)pthread_self(), __func__);
+}
+
+void thread_two_info(void)
+{
+    for (int i = 0; i < 5; ++i)
+    {
+        printf("in thread2, sleep...\n");
+        sleep(1);
+    }
+    printf("thread %ld: in %s\n", (long)pthread_self(), __func__);
+}
+
+int main(int argc, char **argv)
+{
+    pthread_t tid_1, tid_2;
+    int ret;
+    struct sched_param param_1, param_2;
+    int num_1, num_2;
+
+    if (argc != 3)
+    {
+        printf("usage: %s thread_one_priority thread_two_priority\n", argv[0]);
+        exit(1);
+    }
+
+    num_1 = atoi(argv[1]);
+    num_2 = atoi(argv[2]);
+
+    pthread_attr_t attr_1;
+    pthread_attr_t attr_2;
+
+    /* 初始化线程属性 */
+    pthread_attr_init(&attr_1);
+    pthread_attr_init(&attr_2);
+
+    /* 获取初始化线程优先级 */
+    if ((ret = pthread_attr_getschedparam(&attr_1, &param_1)) != 0)
+        err("thread_1: cannot get schedule paramters");
+    if ((ret = pthread_attr_getschedparam(&attr_2, &param_2)) != 0)
+        err("thread_2: cannot get schedule paramters");
+    printf("thread_1 priority: %d\n", param_1.sched_priority);
+    printf("thread_2 priority: %d\n", param_2.sched_priority);
+
+    /* 更改线程优先级 */
+    param_1.sched_priority = num_1;
+    param_2.sched_priority = num_2;
+    printf("======now thread priority======\n");
+    printf("thread_1 priority: %d\n", param_1.sched_priority);
+    printf("thread_2 priority: %d\n", param_2.sched_priority);
+
+
+    /* 设置线程作用域 */
+    if (pthread_attr_setscope(&attr_1, PTHREAD_SCOPE_SYSTEM) != 0)
+        err("thread_1: cannot set schedule scope");
+    if (pthread_attr_setscope(&attr_2, PTHREAD_SCOPE_SYSTEM) != 0)
+        err("thread_2: cannot set schedule scope");
+
+    /* 设置调度策略 */
+    if (pthread_attr_setschedpolicy(&attr_1, SCHED_RR) != 0)
+        err("thread_1: cannot set schedule policy to shced_rr");
+    if (pthread_attr_setschedpolicy(&attr_2, SCHED_RR) != 0)
+        err("thread_2: cannot set schedule policy to sched_rr");
+
+    /* 设置线程调度优先级 */
+    if ((ret = pthread_attr_setschedparam(&attr_1, &param_1)) != 0)
+        err("thread_1: cannot set schedule paramters");
+    if (pthread_attr_setschedparam(&attr_2, &param_2) != 0)
+        err("thread_2: cannot set schedule paramters");
+
+    /* 创建新线程 */
+    if (pthread_create(&tid_1, &attr_1, (void *(*)(void *))thread_one_info, nullptr) == -1)
+        err("thread_1: cannot create thread_1");
+    if (pthread_create(&tid_2, &attr_2, (void *(*)(void *))thread_two_info, nullptr) == -1)
+        err("thread_2: cannot crate thread_2");
+
+
+    pthread_join(tid_1, nullptr);
+    pthread_join(tid_2, nullptr);
+
+    return 0;
+}
+@

@@ -1,0 +1,168 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.07.01.29.22;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@memory align
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@#include <stdio.h>
+
+struct Test1
+{
+    char m1;
+    int m2;
+    short m3;
+
+    void show_menber_address()
+    {
+        printf("Test1 size: %ld\n", sizeof(Test1));
+        printf("m1 address: %p\n", &m1);
+        printf("m2 address: %p\n", &m2);
+        printf("m3 address: %p\n", &m3);
+    }
+};
+
+struct Test2
+{
+    char m1;
+    short m2;
+    int m3;
+
+    void show_menber_address()
+    {
+        printf("Test2 size: %ld\n", sizeof(Test2));
+        printf("m1 address: %p\n", &m1);
+        printf("m2 address: %p\n", &m2);
+        printf("m3 address: %p\n", &m3);
+    }
+};
+
+#pragma pack(2)
+struct Test3
+{
+    char m1;
+    int m2;
+    short m3;
+
+    void show_menber_address()
+    {
+        printf("Test3 size: %ld\n", sizeof(Test3));
+        printf("m1 address: %p\n", &m1);
+        printf("m2 address: %p\n", &m2);
+        printf("m3 address: %p\n", &m3);
+    }
+};
+
+#pragma pack(4)
+struct Test4
+{
+    char m1;
+    int m2;
+    short m3;
+    void show_menber_address()
+    {
+        printf("Test4 size: %ld\n", sizeof(Test4));
+        printf("m1 address: %p\n", &m1);
+        printf("m2 address: %p\n", &m2);
+        printf("m3 address: %p\n", &m3);
+    }
+};
+
+struct Test5
+{
+    char m1;
+    short m2;
+    int m3;
+    double m4;
+
+    Test5()
+    {
+        show_menber_address();
+    }
+
+    void show_menber_address()
+    {
+        printf("Test5 size: %ld\n", sizeof(Test5));
+        printf("m1 address: %p\n", &m1);
+        printf("m2 address: %p\n", &m2);
+        printf("m3 address: %p\n", &m3);
+        printf("m4 address: %p\n", &m4);
+    }
+};
+
+struct Test6
+{
+    char m1;
+    int m2;
+    double m3;
+    short m4;
+
+    Test6()
+    {
+        show_menber_address();
+    }
+    void show_menber_address()
+    {
+        printf("Test6 size: %ld\n", sizeof(Test6));
+        printf("m1 address: %p\n", &m1);
+        printf("m2 address: %p\n", &m2);
+        printf("m3 address: %p\n", &m3);
+        printf("m4 address: %p\n", &m4);
+    }
+};
+
+#pragma pack(4)
+struct Test7
+{
+    char m1;
+    int m2;
+    double m3;
+    short m4;
+
+    Test7()
+    {
+        show_menber_address();
+    }
+
+    void show_menber_address()
+    {
+        printf("Test7 size: %ld\n", sizeof(Test7));
+        printf("m1 address: %p\n", &m1);
+        printf("m2 address: %p\n", &m2);
+        printf("m3 address: %p\n", &m3);
+        printf("m4 address: %p\n", &m4);
+    }
+};
+
+int main(void)
+{
+    Test1 st1;
+    Test2 st2;
+    Test3 st3;
+    Test4 st4;
+    Test5 st5;
+    Test6 st6;
+    Test7 st7;
+    st1.show_menber_address();
+    st2.show_menber_address();
+    st3.show_menber_address();
+    st4.show_menber_address();
+    return 0;
+}
+@

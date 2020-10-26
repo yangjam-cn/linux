@@ -1,0 +1,137 @@
+head	1.1;
+access;
+symbols;
+locks; strict;
+comment	@// @;
+
+
+1.1
+date	2020.10.05.12.20.09;	author yungjam;	state Exp;
+branches;
+next	;
+
+
+desc
+@test mutex by file mark
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@/*
+ * 通过文件实现进程互斥
+ * 进程1创建文件，当进程2检查到该文件存在时，无法访问该资源，执行阻塞操作
+ */
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/unistd.h>
+
+/*
+ * 尝试获取文件权限
+ * 通过检查文件是否存在来判断是否可访问该资源
+ */
+int get_access_right(int inq_interval, int retry_times, char *file_name)
+{
+    int fd, count = 0;
+
+    /* 若文件不存在则创建文件，若存在则返回-1 */
+    fd = creat(file_name, 0);
+
+    /* 重复尝试获取文件权限 */
+    while (fd == -1 && errno == EACCES)
+    {
+        /* 输出提示信息 */
+        printf("pid: %ld process try to get access right...\n", (long)getpid());
+
+        if (++count < retry_times)
+            sleep(inq_interval);
+        else
+            return -1;
+
+        fd = creat(file_name, 0);
+    }
+
+    close(fd);
+
+    if (fd != -1)
+        return 1;
+    else
+        return -1;
+}
+
+/*
+ * 释放进程占用的文件
+ * 删除产生的标识文件
+ */
+int release_right(char *file_name)
+{
+    int result;
+
+    result = unlink(file_name);    /* 删除该文件 */
+
+    if (result == 0)
+        return 1;
+    else
+        return -1;
+}
+
+int main(int argc, char *argv[])
+{
+    int retry_times, inq_interval;
+    int len;
+    int count = 0;
+
+    if (argc != 4)
+    {
+        printf("usage: %s retry_times inq_interval file_name\n", argv[0]);
+        return 1;
+    }
+
+    retry_times = atoi(argv[1]);
+    if (retry_times < 0)
+    {
+        printf("illegal retry times!\n");
+        return 1;
+    }
+
+    inq_interval = atoi(argv[2]);
+    if (inq_interval < 0)
+    {
+        printf("illegal inquiring interval\n");
+        return 1;
+    }
+
+    len = strlen(argv[3]);
+    if (len == 0)
+    {
+        printf("illegal file name\n");
+        return 1;
+    }
+
+    if (get_access_right(inq_interval, retry_times, argv[3]) == 1)
+    {
+        /* 模拟对资源的使用 */
+        while (count < 5)
+        {
+            printf("pid: %ld process is ocoupying the resource, circle %d\n", (long)getpid(), count);
+            count++;
+            sleep(inq_interval);
+        }
+
+        release_right(argv[3]);
+    }
+    else
+        printf("pid: %ld process cannot access the resource...retry %d times\n", (long)getpid(), retry_times);
+
+    return 0;
+}
+@
